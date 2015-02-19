@@ -15,9 +15,8 @@ public class HitWallRight implements Behavior {
 
 	@Override
 	public boolean takeControl() {
-		boolean pressed = robot.getRightTouchSensor().isPressed();
-
-		return pressed;
+		// return true if the left sensor is being pressed
+		return robot.getRightTouchSensor().isPressed();
 	}
 
 	@Override

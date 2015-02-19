@@ -15,9 +15,8 @@ public class HitWallLeft implements Behavior {
 
 	@Override
 	public boolean takeControl() {
-		boolean pressed = robot.getLeftTouchSensor().isPressed();
-		
-		return pressed;
+		// return true if the left sensor is being pressed
+		return robot.getLeftTouchSensor().isPressed();
 	}
 
 	@Override
@@ -27,7 +26,8 @@ public class HitWallLeft implements Behavior {
 
 		suppressed = false;
 		
-		robot.getPilot().travel(-5);		
+		// reverse and rotate to the right by 90 degrees
+		robot.getPilot().travel(-1 * Robot.TRAVEL_DIST);		
 		robot.getPilot().rotate(-90);
 		
 		if(robot.getPilot().isMoving() && !suppressed)

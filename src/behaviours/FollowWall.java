@@ -6,18 +6,19 @@ import lejos.robotics.subsumption.Behavior;
 import lejos.util.Delay;
 
 public class FollowWall implements Behavior {
+	
 	private static final int OUT_OF_RANGE = 255;
 
     private int[] distances = {0,0,0,0};
-    private int startIndex = 0;
+    private int distanceIndex = 0;
     
-    private int lastAverage = 0;
-    private int newAverage = 0;
+    private int lastAvg = 0;
+    private int newAvg = 0;
 
     private boolean suppressed = false;
     private boolean rotating = false;
 
-    private int totalAngle = 0;
+    private int turnAngle = 0;
     
     private Robot robot;
 
@@ -27,6 +28,7 @@ public class FollowWall implements Behavior {
 
 	@Override
 	public boolean takeControl() {
+		// return true if we are close to a wall
 		return robot.getUltrasonicSensor().getDistance() < (Robot.CLOSE_DISTANCE * 2);
 	}
 
@@ -37,6 +39,7 @@ public class FollowWall implements Behavior {
 		
 		suppressed = false;
 		
+		// check we're not in the process of turning towards or away from a wall
 		if(rotating) {
             return;
 		}
@@ -46,50 +49,34 @@ public class FollowWall implements Behavior {
 		if(d == 0 || d >= OUT_OF_RANGE)
 			return;
 		
+		// move forward, before calculating distance again
 		robot.getPilot().travel(10, true);
         
         // store distance
-        distances[startIndex] = d;
+        distances[distanceIndex] = d;
 
-		// check we have at least 3 readings
-		if(startIndex < 3) {
-			startIndex++;
+		// make sure we have at least 3 readings
+		if(distanceIndex < 3) {
+			distanceIndex++;
 			return;
 		}
 
 		if(suppressed)
 			return;
 		
-		newAverage = (distances[startIndex - 1] + distances[startIndex - 2] + distances[startIndex - 3]) / 3;
+		// calculate the mean of the previous three distances
+		newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
 		
-		/*// take median of last three readings
-		if(distances[startIndex - 1] >=  distances[startIndex - 2]) {
-		        
-			if(distances[startIndex - 1] >=  distances[startIndex - 3]) {
-				//Found Max
-				newAverage = Math.max(distances[startIndex - 2], distances[startIndex - 3]);
-			} else {
-				newAverage = distances[startIndex - 1];
-			}
-		} else {
-			if(distances[startIndex - 1] >=  distances[startIndex - 3]) {
-				newAverage = distances[startIndex - 1];
-			} else {
-				newAverage = Math.max(distances[startIndex - 2], distances[startIndex - 3]);
-			}
-		        
-		}*/
-		
-        startIndex++;
+        distanceIndex++;
 
 		// loop index
-		if(startIndex >= 4) {
-			startIndex = 0;
+		if(distanceIndex >= 4) {
+			distanceIndex = 0;
 		}
 
 		// check whether this is the first time we've taken an average
-		if(lastAverage == 0) {
-			lastAverage = newAverage;
+		if(lastAvg == 0) {
+			lastAvg = newAvg;
 			return;
 		}
 
@@ -97,48 +84,50 @@ public class FollowWall implements Behavior {
 			return;
 		}
 
-        if(newAverage - lastAverage >= 10) {
-                totalAngle = 20;
-        } else if(newAverage - lastAverage >= 5) {
-                totalAngle = 15;
-        } else if(newAverage - lastAverage >= 3) {
-                totalAngle = 10;
-        } else if(newAverage - lastAverage == 2) {
-                totalAngle = 10;
-        } else if(newAverage - lastAverage == 1) {
-                totalAngle = 5;
-        } else if(newAverage - lastAverage <= -10) {
-                totalAngle = -20;
-        } else if(newAverage - lastAverage <= -5) {
-                totalAngle = -15;
-        } else if(newAverage - lastAverage <= -3) {
-                totalAngle = -10;
-        } else if(newAverage - lastAverage == -2) {
-                totalAngle = -10;
-        } else if(newAverage - lastAverage == -1) {
-                totalAngle = -5;
-        } else {
-                return;
-        }
-        
-        LCD.drawString("Last Avg = " + Integer.toString(lastAverage), 0, 2);
-        LCD.drawString("New Avg = " + Integer.toString(newAverage), 0, 3);
+		// set the turning angle according to the difference between the last two calculated averages
+		// if difference is positive, the robot will turn towards the wall
+		// if negative, the robot will turn away from the wall
+		if(newAvg - lastAvg >= 10) {
+			turnAngle = 20;
+		} else if(newAvg - lastAvg >= 5) {
+			turnAngle = 15;
+		} else if(newAvg - lastAvg >= 3) {
+			turnAngle = 15;
+		} else if(newAvg - lastAvg == 2) {
+			turnAngle = 10;
+		} else if(newAvg - lastAvg == 1) {
+			turnAngle = 5;
+		} else if(newAvg - lastAvg <= -10) {
+			turnAngle = -20;
+		} else if(newAvg - lastAvg <= -5) {
+			turnAngle = -15;
+		} else if(newAvg - lastAvg <= -3) {
+			turnAngle = -15;
+		} else if(newAvg - lastAvg == -2) {
+			turnAngle = -10;
+		} else if(newAvg - lastAvg == -1) {
+			turnAngle = -5;
+		} else {
+			return;
+		}
 
-        if(totalAngle != 0)
-        	robot.getPilot().rotate(totalAngle);
-        
-        rotating = true;
+		rotating = true;
 
-        robot.getPilot().forward();
-        
-        d = robot.getUltrasonicSensor().getDistance();
-        while(Math.abs(newAverage - d) < 3 && d < Robot.CLOSE_DISTANCE * 2 && !suppressed) {
-        	Thread.yield();
-        	d = robot.getUltrasonicSensor().getDistance();
-        }
-        
-        resetValues();
-        robot.getPilot().stop();
+		// turn the robot
+		if(turnAngle != 0)
+			robot.getPilot().rotate(turnAngle);
+
+		// continue driving forward until our distance from the wall changes
+		robot.getPilot().forward();
+    
+		d = robot.getUltrasonicSensor().getDistance();
+		while(Math.abs(newAvg - d) < 3 && d < Robot.CLOSE_DISTANCE * 2 && !suppressed) {
+			Thread.yield();
+			d = robot.getUltrasonicSensor().getDistance();
+		}
+    
+		resetValues();
+		robot.getPilot().stop();
 	}
 
 	@Override
@@ -149,12 +138,15 @@ public class FollowWall implements Behavior {
 		suppressed = true;
 	}
 	
+	/**
+	 * Resets all distances and averages used by this behaviour.
+	 */
 	private void resetValues() {
 		for(int i=0; i<4; i++) {
 			distances[i] = 0;
 		}
-		startIndex = 0;
-		lastAverage = 0;
+		distanceIndex = 0;
+		lastAvg = 0;
 		rotating = false;
 	}
 

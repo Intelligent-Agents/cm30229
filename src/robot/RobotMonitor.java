@@ -12,6 +12,9 @@ public class RobotMonitor extends Thread {
 		delay = d;
 	}
 	
+	/**
+	 * Execute the monitor thread, printing the current status of the robot's sensors.
+	 */
 	public void run() {
 		while(true) {
 			LCD.clear();
@@ -21,6 +24,6 @@ public class RobotMonitor extends Thread {
 			LCD.drawString("Distance = " + Integer.toString(robot.getUltrasonicSensor().getDistance()), 0, 4);
 			
 			try { this.sleep(delay); } catch (Exception e) { ; }
-		} // end while
-	} // end run
-} // end class
+		}
+	}
+}

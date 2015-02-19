@@ -24,6 +24,7 @@ public class DriveForward implements Behavior {
 		
 		suppressed = false;
 		
+		// drive forward until a higher priority behaviour requests attention
 		robot.getPilot().forward();
 
 		while( !suppressed )
