@@ -13,8 +13,6 @@ public class Robot {
 	private static final TouchSensor rightTouch = new TouchSensor(SensorPort.S1);
 	private static final UltrasonicSensor sonic = new UltrasonicSensor(SensorPort.S2);
 	private static final DifferentialPilot p = new DifferentialPilot(5.6, 11.8, Motor.C, Motor.A);
-	
-	private boolean isAligned = false;
 
 	public Robot() {}
 
@@ -32,13 +30,5 @@ public class Robot {
 
 	public DifferentialPilot getPilot() {
 		return p;
-	}
-	
-	public void setAligned(boolean aligned) {
-		isAligned = aligned;
-	}
-	
-	public boolean isAligned() {
-		return isAligned;
 	}
 }

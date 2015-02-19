@@ -32,8 +32,7 @@ public class ExploreWallEnd implements Behavior {
 		LCD.drawString("Exploring", 0, 1);
 		
 		suppressed = false;
-		
-		robot.setAligned(false);
+
 		robot.getPilot().arc(20, 180, true);
 		
 		

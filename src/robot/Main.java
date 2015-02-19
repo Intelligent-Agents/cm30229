@@ -1,13 +1,10 @@
 package robot;
 
-import behaviours.AvoidWall;
 import behaviours.HitWallLeft;
 import behaviours.HitWallRight;
 import behaviours.DriveForward;
 import behaviours.ExploreWallEnd;
-import behaviours.AlignWithWall;
-import behaviours.TurnToWall;
-import behaviours.TurnFromWall;
+import behaviours.FollowWall;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.robotics.subsumption.Arbitrator;
@@ -27,12 +24,9 @@ public class Main {
 		Behavior b2 = new HitWallRight(robot);
 		Behavior b3 = new HitWallLeft(robot);
 		Behavior b4 = new ExploreWallEnd(robot);
-		Behavior b5 = new AlignWithWall(robot);
-		Behavior b6 = new TurnToWall(robot);
-		Behavior b7 = new TurnFromWall(robot);
-		Behavior b8 = new AvoidWall(robot);
+		Behavior b5 = new FollowWall(robot);
 		
-		Behavior [] bArray = { b1, b6, b7, b5, b4, b8, b2, b3 };
+		Behavior [] bArray = { b1, b5, b2, b3 };
 	 	Arbitrator arb = new Arbitrator(bArray);
 
 	 	arb.start();

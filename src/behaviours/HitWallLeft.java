@@ -17,9 +17,6 @@ public class HitWallLeft implements Behavior {
 	public boolean takeControl() {
 		boolean pressed = robot.getLeftTouchSensor().isPressed();
 		
-		if(pressed)
-			AlignWithWall.thisDistance = 0;
-		
 		return pressed;
 	}
 
@@ -27,8 +24,7 @@ public class HitWallLeft implements Behavior {
 	public void action() {
 		LCD.clear();
 		LCD.drawString("Left Bumper Hit", 0, 1);
-		
-		robot.setAligned(false);
+
 		suppressed = false;
 		
 		robot.getPilot().travel(-5);		
