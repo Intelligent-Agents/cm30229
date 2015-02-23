@@ -3,11 +3,8 @@ package behaviours;
 import robot.Robot;
 import lejos.nxt.LCD;
 import lejos.robotics.subsumption.Behavior;
-import lejos.util.Delay;
 
 public class FollowWall implements Behavior {
-	
-	private static final int OUT_OF_RANGE = 255;
 
     private int[] distances = {0,0,0,0};
     private int distanceIndex = 0;
@@ -17,8 +14,6 @@ public class FollowWall implements Behavior {
 
     private boolean suppressed = false;
     private boolean rotating = false;
-
-    private int turnAngle = 0;
     
     private Robot robot;
 
@@ -29,7 +24,7 @@ public class FollowWall implements Behavior {
 	@Override
 	public boolean takeControl() {
 		// return true if we are close to a wall
-		return robot.getUltrasonicSensor().getDistance() < (Robot.CLOSE_DISTANCE * 2);
+		return robot.getUltrasonicSensor().getDistance() < (Robot.CLOSE_DISTANCE * 3);
 	}
 
 	@Override
@@ -41,12 +36,14 @@ public class FollowWall implements Behavior {
 		
 		// check we're not in the process of turning towards or away from a wall
 		if(rotating) {
+			resetValues();
             return;
 		}
 
 		int d = robot.getUltrasonicSensor().getDistance();
 
-		if(d == 0 || d >= OUT_OF_RANGE)
+		// check that the distance is within reasonable bounds
+		if(d == 0 || d >= Robot.CLOSE_DISTANCE * 5)
 			return;
 		
 		// move forward, before calculating distance again
@@ -61,8 +58,10 @@ public class FollowWall implements Behavior {
 			return;
 		}
 
-		if(suppressed)
+		if(suppressed) {
+			resetValues();
 			return;
+		}
 		
 		// calculate the mean of the previous three distances
 		newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
@@ -81,32 +80,41 @@ public class FollowWall implements Behavior {
 		}
 
 		if(suppressed) {
+			resetValues();
 			return;
 		}
 
+		
+		int diff = newAvg - lastAvg;
+		int turnAngle = 0;
+		
 		// set the turning angle according to the difference between the last two calculated averages
-		// if difference is positive, the robot will turn towards the wall
-		// if negative, the robot will turn away from the wall
-		if(newAvg - lastAvg >= 10) {
-			turnAngle = 20;
-		} else if(newAvg - lastAvg >= 5) {
-			turnAngle = 15;
-		} else if(newAvg - lastAvg >= 3) {
-			turnAngle = 15;
-		} else if(newAvg - lastAvg == 2) {
-			turnAngle = 10;
-		} else if(newAvg - lastAvg == 1) {
-			turnAngle = 5;
-		} else if(newAvg - lastAvg <= -10) {
-			turnAngle = -20;
-		} else if(newAvg - lastAvg <= -5) {
-			turnAngle = -15;
-		} else if(newAvg - lastAvg <= -3) {
-			turnAngle = -15;
-		} else if(newAvg - lastAvg == -2) {
-			turnAngle = -10;
-		} else if(newAvg - lastAvg == -1) {
-			turnAngle = -5;
+		if(diff > 0 && newAvg > Robot.CLOSE_DISTANCE) {
+			// difference is positive, so robot will turn towards the wall
+			if(diff >= 10) {
+				turnAngle = 20;
+			} else if(diff >= 5) {
+				turnAngle = 17;
+			} else if(diff >= 3) {
+				turnAngle = 15;
+			} else if(diff == 2) {
+				turnAngle = 10;
+			} else if(diff == 1) {
+				turnAngle = 5;
+			}
+		} else if(diff < 0) {
+			// negative, so the robot will turn away from the wall
+			if(diff <= -10) {
+				turnAngle = -20;
+			} else if(diff <= -5) {
+				turnAngle = -17;
+			} else if(diff <= -3) {
+				turnAngle = -15;
+			} else if(diff == -2) {
+				turnAngle = -10;
+			} else if(diff == -1) {
+				turnAngle = -5;
+			}
 		} else {
 			return;
 		}
@@ -119,22 +127,19 @@ public class FollowWall implements Behavior {
 
 		// continue driving forward until our distance from the wall changes
 		robot.getPilot().forward();
-    
+
 		d = robot.getUltrasonicSensor().getDistance();
-		while(Math.abs(newAvg - d) < 3 && d < Robot.CLOSE_DISTANCE * 2 && !suppressed) {
+		while(Math.abs(newAvg - d) < d / 10 && d < Robot.CLOSE_DISTANCE * 2 && !suppressed) {
 			Thread.yield();
 			d = robot.getUltrasonicSensor().getDistance();
 		}
-    
+
 		resetValues();
 		robot.getPilot().stop();
 	}
 
 	@Override
 	public void suppress() {
-		resetValues();
-    
-		robot.getPilot().stop();
 		suppressed = true;
 	}
 	
@@ -147,6 +152,7 @@ public class FollowWall implements Behavior {
 		}
 		distanceIndex = 0;
 		lastAvg = 0;
+		newAvg = 0;
 		rotating = false;
 	}
 
