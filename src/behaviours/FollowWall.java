@@ -6,11 +6,12 @@ import lejos.robotics.subsumption.Behavior;
 
 public class FollowWall implements Behavior {
 
-    private int[] distances = {0,0,0,0};
+    private int[] distances = {Robot.INVALID_DISTANCE, Robot.INVALID_DISTANCE,
+    						   Robot.INVALID_DISTANCE, Robot.INVALID_DISTANCE};
     private int distanceIndex = 0;
     
-    private int lastAvg = 0;
-    private int newAvg = 0;
+    private int lastAvg = Robot.INVALID_DISTANCE;
+    private int newAvg = Robot.INVALID_DISTANCE;
 
     private boolean suppressed = false;
     private boolean rotating = false;
@@ -64,8 +65,24 @@ public class FollowWall implements Behavior {
 		}
 		
 		// calculate the mean of the previous three distances
-		newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
+		//newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
 		
+		//calculate the median of the previous three distances
+		if(distances[distanceIndex - 1] >=  distances[distanceIndex - 2]) {
+			if(distances[distanceIndex - 1] >=  distances[distanceIndex - 3]) {
+				//Found Max
+				newAvg = Math.max(distances[distanceIndex - 2], distances[distanceIndex - 3]);
+			} else {
+				newAvg = distances[distanceIndex - 1];
+			}
+		} else {
+			if(distances[distanceIndex - 1] >=  distances[distanceIndex - 3]) {
+				newAvg = distances[distanceIndex - 1];
+			} else {
+				newAvg = Math.max(distances[distanceIndex - 2], distances[distanceIndex - 3]);
+			}
+		}
+
         distanceIndex++;
 
 		// loop index
@@ -74,7 +91,7 @@ public class FollowWall implements Behavior {
 		}
 
 		// check whether this is the first time we've taken an average
-		if(lastAvg == 0) {
+		if(lastAvg == Robot.INVALID_DISTANCE) {
 			lastAvg = newAvg;
 			return;
 		}
@@ -84,7 +101,6 @@ public class FollowWall implements Behavior {
 			return;
 		}
 
-		
 		int diff = newAvg - lastAvg;
 		int turnAngle = 0;
 		
@@ -94,13 +110,13 @@ public class FollowWall implements Behavior {
 			if(diff > 10) {
 				turnAngle = 20;
 			} else if(diff > 5) {
-				turnAngle = 17;
+				turnAngle = 20;
 			} else if(diff >= 3) {
-				turnAngle = 15;
+				turnAngle = 17;
 			} else if(diff == 2) {
-				turnAngle = 10;
+				turnAngle = 15;
 			} else if(diff == 1) {
-				turnAngle = 5;
+				turnAngle = 10;
 			}
 		} else if(newAvg > Robot.CLOSE_DISTANCE && diff > -3) {
 			// robot is a long way from the wall, so turn towards it
@@ -118,8 +134,6 @@ public class FollowWall implements Behavior {
 			} else if(diff == -1) {
 				turnAngle = -5;
 			}
-		} else {
-			return;
 		}
 
 		rotating = true;
@@ -151,11 +165,11 @@ public class FollowWall implements Behavior {
 	 */
 	private void resetValues() {
 		for(int i=0; i<4; i++) {
-			distances[i] = 0;
+			distances[i] = Robot.INVALID_DISTANCE;
 		}
 		distanceIndex = 0;
-		lastAvg = 0;
-		newAvg = 0;
+		lastAvg = Robot.INVALID_DISTANCE;
+		newAvg = Robot.INVALID_DISTANCE;
 		rotating = false;
 	}
 

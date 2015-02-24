@@ -7,6 +7,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 public class Robot {
 	// set distances
+	public static final int INVALID_DISTANCE = -1;
 	public static final int OUT_OF_RANGE = 255;
 	public static final int CLOSE_DISTANCE = 20;
 	public static final int TRAVEL_DIST = CLOSE_DISTANCE / 4;
