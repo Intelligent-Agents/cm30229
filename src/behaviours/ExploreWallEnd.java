@@ -5,6 +5,7 @@ import lejos.nxt.LCD;
 import lejos.robotics.subsumption.Behavior;
 
 public class ExploreWallEnd implements Behavior {
+	private static final int INVALID_DISTANCE = -1;
 	boolean suppressed;
 	int lastDistance, endOfWallDistance;
 	boolean endOfWall, isTurning;
@@ -15,24 +16,28 @@ public class ExploreWallEnd implements Behavior {
 		suppressed = false;
 		endOfWall = false;
 		isTurning = false;
-		lastDistance = 255;
-		endOfWallDistance = 255;
+		lastDistance = INVALID_DISTANCE;
+		endOfWallDistance = INVALID_DISTANCE;
 	}
 
 	@Override
 	public boolean takeControl() {
 		int dist = robot.getUltrasonicSensor().getDistance();
 		
-		// check whether we have reached the end of a wall
-		boolean ret = !isTurning && lastDistance < 3 * Robot.CLOSE_DISTANCE &&
-				dist - lastDistance > Robot.CLOSE_DISTANCE;
+		// make sure we have a previous reading before checking for the end of a wall
+		if(lastDistance != INVALID_DISTANCE) {
 		
-		// we have reached the end of a wall, so save these values until we can call action()
-	 	if(ret) {
-			endOfWall = true;
-			endOfWallDistance = lastDistance;
+			// check whether we have reached the end of a wall
+			boolean ret = !isTurning && lastDistance < 3 * Robot.CLOSE_DISTANCE &&
+					dist - lastDistance > Robot.CLOSE_DISTANCE;
+			
+			// we have reached the end of a wall, so save these values until we can call action()
+		 	if(ret) {
+				endOfWall = true;
+				endOfWallDistance = lastDistance;
+			}
 		}
-					  
+
 		lastDistance = dist;
 		
 		// this will continue to return true until action() is called
@@ -51,16 +56,24 @@ public class ExploreWallEnd implements Behavior {
 		isTurning = true;
 
 		// arc around end of wall
-		robot.getPilot().arcForward(endOfWallDistance);
+		robot.getPilot().arcForward(Robot.CLOSE_DISTANCE);
 		
 		// continue following arc until we find the adjoining wall, or we arc 180 degrees
 		int d = robot.getUltrasonicSensor().getDistance();
 		float a = robot.getPilot().getAngleIncrement();
-		while(d > endOfWallDistance - 2 && a < 180 && !suppressed) {
+		while(d > endOfWallDistance - 2 && a < 90 && !suppressed) {
 			Thread.yield();
 			
 			d = robot.getUltrasonicSensor().getDistance();
 			a = robot.getPilot().getAngleIncrement();
+		}
+		
+		robot.getPilot().forward();
+		
+		while(d > endOfWallDistance - 2 && ! suppressed) {
+			Thread.yield();
+			
+			d = robot.getUltrasonicSensor().getDistance();
 		}
 		
 		endOfWallDistance = 0;
@@ -72,7 +85,7 @@ public class ExploreWallEnd implements Behavior {
 	@Override
 	public void suppress() {
 		endOfWall = false;
-		endOfWallDistance = 0;
+		endOfWallDistance = INVALID_DISTANCE;
 		isTurning = false;
 		suppressed = true;
 	}
