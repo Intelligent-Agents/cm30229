@@ -89,11 +89,11 @@ public class FollowWall implements Behavior {
 		int turnAngle = 0;
 		
 		// set the turning angle according to the difference between the last two calculated averages
-		if(diff > 0 && newAvg > Robot.CLOSE_DISTANCE) {
-			// difference is positive, so robot will turn towards the wall
-			if(diff >= 10) {
+		if(diff > 0) {
+			// positive, so the robot will turn towards the wall
+			if(diff > 10) {
 				turnAngle = 20;
-			} else if(diff >= 5) {
+			} else if(diff > 5) {
 				turnAngle = 17;
 			} else if(diff >= 3) {
 				turnAngle = 15;
@@ -102,6 +102,9 @@ public class FollowWall implements Behavior {
 			} else if(diff == 1) {
 				turnAngle = 5;
 			}
+		} else if(newAvg > Robot.CLOSE_DISTANCE && diff > -3) {
+			// robot is a long way from the wall, so turn towards it
+			turnAngle = 5;
 		} else if(diff < 0) {
 			// negative, so the robot will turn away from the wall
 			if(diff <= -10) {

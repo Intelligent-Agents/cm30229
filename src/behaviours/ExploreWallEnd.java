@@ -70,10 +70,12 @@ public class ExploreWallEnd implements Behavior {
 		
 		robot.getPilot().forward();
 		
-		while(d > endOfWallDistance - 2 && ! suppressed) {
+		float m = robot.getPilot().getMovementIncrement();
+		while(d > endOfWallDistance && m < 20 && ! suppressed) {
 			Thread.yield();
 			
 			d = robot.getUltrasonicSensor().getDistance();
+			m = robot.getPilot().getMovementIncrement();
 		}
 		
 		endOfWallDistance = 0;
