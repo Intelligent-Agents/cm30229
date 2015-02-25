@@ -65,10 +65,10 @@ public class FollowWall implements Behavior {
 		}
 		
 		// calculate the mean of the previous three distances
-		//newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
+		newAvg = (distances[distanceIndex - 1] + distances[distanceIndex - 2] + distances[distanceIndex - 3]) / 3;
 		
 		//calculate the median of the previous three distances
-		if(distances[distanceIndex - 1] >=  distances[distanceIndex - 2]) {
+		/*if(distances[distanceIndex - 1] >=  distances[distanceIndex - 2]) {
 			if(distances[distanceIndex - 1] >=  distances[distanceIndex - 3]) {
 				//Found Max
 				newAvg = Math.max(distances[distanceIndex - 2], distances[distanceIndex - 3]);
@@ -81,7 +81,7 @@ public class FollowWall implements Behavior {
 			} else {
 				newAvg = Math.max(distances[distanceIndex - 2], distances[distanceIndex - 3]);
 			}
-		}
+		}*/
 
         distanceIndex++;
 
@@ -118,9 +118,6 @@ public class FollowWall implements Behavior {
 			} else if(diff == 1) {
 				turnAngle = 10;
 			}
-		} else if(newAvg > Robot.CLOSE_DISTANCE && diff > -3) {
-			// robot is a long way from the wall, so turn towards it
-			turnAngle = 5;
 		} else if(diff < 0) {
 			// negative, so the robot will turn away from the wall
 			if(diff <= -10) {
