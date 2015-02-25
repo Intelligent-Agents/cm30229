@@ -53,6 +53,19 @@ public class ExploreWallEnd implements Behavior {
 		suppressed = false;
 		
 		isTurning = true;
+		
+		// arc around end of wall
+		robot.getPilot().arcForward(endOfWallDistance);
+		
+		// continue following arc until we find the adjoining wall, or we arc 180 degrees
+		/*int d = robot.getUltrasonicSensor().getDistance();
+		float a = robot.getPilot().getAngleIncrement();
+		while(d > endOfWallDistance - 3 && a < 180 && !suppressed) {
+			Thread.yield();
+			
+			d = robot.getUltrasonicSensor().getDistance();
+			a = robot.getPilot().getAngleIncrement();
+		}*/
 
 		// arc around end of wall
 		robot.getPilot().arcForward(Robot.CLOSE_DISTANCE);
